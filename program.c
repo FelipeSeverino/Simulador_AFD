@@ -98,7 +98,10 @@ void simulacao() {
 
         int existe = 0;
         existe = existeEstado(doEstado, af);
-        if (existe == 0) {printf("Estado invalido");}
+        if (existe == 0) {
+            printf("Estado invalido");
+            continue;
+        }
         //---
 
         printf("Para o estado: ");
@@ -106,8 +109,11 @@ void simulacao() {
         fgets(paraEstado, 5, stdin);
 
         existe = 0;
-        existe = existeEstado(doEstado, af);
-        if (existe == 0) {printf("Estado invalido");}
+        existe = existeEstado(paraEstado, af);
+        if (existe == 0) {
+            printf("Estado invalido");
+            continue;
+        }
         //--
 
         printf("Simbolo: ");
@@ -118,11 +124,24 @@ void simulacao() {
         inserirTransicao(transicao, af);
     }
 
-    while (1) {
-        
-    }
+    // printf("\n------------\n");
+    // printf("Estados: ");
+    // ESTADO *currentEstado = af->estado;
+    // while (currentEstado != NULL) {
+    //     printf("%s", currentEstado->nome);
+    //     currentEstado = currentEstado->next;
+    // }
+    // printf("\n-\n");
+    // printf("------------");
+    
+    printf("ANALISE PRELIMINAR: ");
+    int tipoAF = classificaAf(af);
 
-    gerarGrafo(af);
+    if (tipoAF == 1) {printf("AFD");}
+    else if (tipoAF == 2) {printf("AFN");}
+    else if (tipoAF == 3) {printf("AFN com movimento vazios");}
+
+    // gerarGrafo(af);
 
 }
 

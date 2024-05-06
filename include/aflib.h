@@ -80,6 +80,44 @@ AF* criarAF() {
     return novoAF;
 }
 
+
+int comparaTransicoes(const TRANSICAO *t1, const TRANSICAO *t2) {
+    if (t1 == NULL || t2 == NULL) {
+        return 0;
+    }
+
+    if (strcmp(t1->q_from, t2->q_from) == 0 && t1->symbol == t2->symbol) {
+        if (strcmp(t1->q_to, t2->q_to) != 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int classificaAf(AF *af) { //1 = AFD, 2 = AFN, 3 = AFN vazio
+    TRANSICAO *transicoes = af->transicao;
+
+    TRANSICAO *t1 = transicoes;
+    TRANSICAO *t2;
+    int class = 1;
+
+    while (t1 != NULL) {
+        if (t1->symbol == '$') {return 3;}
+
+        t2 = t1->next;
+        while (t2 != NULL) {
+            if (comparaTransicoes(t1, t2)) {
+                class = 2;
+            }
+            t2 = t2->next;
+        }
+        t1 = t1->next;
+    }
+
+    return class;
+}
+
+
 void inserirEstado(ESTADO *estado, AF *af) {
     if (af == NULL) {
         printf("AF invalido!! \n");
