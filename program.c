@@ -7,7 +7,8 @@
 #include "include/graphviz/cdt.h"
 
 void simulacao();
-void gerarGrafo(AF *af);
+// void gerarGrafo(AF *af);
+void generateAutomatonDot(AF *af, const char *filename);
 
 int main() {
     while (1) {
@@ -134,14 +135,19 @@ void simulacao() {
     while (1) {
         printf("tamanho da palavra: ");
         int tamanho;
-        if (scanf("%d", &tamanho) != 1 || tamanho <= 0) {
+        if (scanf("%d", &tamanho) != 1) {
             printf("Input invalido\n");
             exit(1);
         }
-        while (getchar() != '\n');
 
+        
         printf("Digite uma palavra: ");
+
+        
         char *palavra = (char*)malloc(sizeof(char) * (tamanho + 1));
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
+
         if (palavra == NULL) {
             printf("Erro mem alloc.\n");
             exit(1);
@@ -185,7 +191,6 @@ void simulacao() {
         printf("1 - Continuar\n2 - Finalizar Simulacao e gerar grafo visual\n");
         scanf("%d", &opcao);
 
-        int c;
         while ((c = getchar()) != '\n' && c != EOF);
 
         if (opcao == 2) {
@@ -194,74 +199,51 @@ void simulacao() {
 
     }
 
-    gerarGrafo(af);
+    // gerarGrafo(af);
+    generateAutomatonDot(af, "teste.dot");
 
 }
 
 
-typedef struct estado_node_map {
-    ESTADO *estado;
-    Agnode_t *node;
-    struct estado_node_map *next;
-} ENMap;
 
-typedef struct en_mapHeader {
-    ENMap *head;
-} ENMapHeader;
-
-void mapearEstadoNode(ESTADO *estado, Agnode_t *node, ENMapHeader *header) {
-    ENMap *map = (ENMap*) malloc(sizeof(ENMap));
-    map->estado = estado;
-    map->node = node;
-    map->next = NULL;
-
-    if (header->head == NULL) {
-        header->head = map;
-    }
-    else {
-        ENMap *currentMap = header->head;
-        while (currentMap->next != NULL) {
-            currentMap = currentMap->next;
-        } 
-        currentMap->next = map;
-    }
-}
-
-void gerarGrafo(AF *af) {
+void generateAutomatonDot(AF *af, const char *filename) {
     GVC_t *gvc;
+    Agraph_t *graph;
+    FILE *fp;
+
     gvc = gvContext();
 
-    // Create a new graph
-    Agraph_t *graph;
-    graph = agopen("graph", Agdirected, NULL);
+    graph = agopen("automaton", Agdirected, NULL);
 
-    // Add nodes and edges to the graph
-    Agnode_t *node1, *node2;
-    node1 = agnode(graph, "node1", 1);
-    node2 = agnode(graph, "node2", 1);
-
-    ESTADO *currentEstado = af->estado;
-    ENMapHeader *enMap = (ENMapHeader*) malloc(sizeof(ENMapHeader));
-    while (currentEstado != NULL) {
-        Agnode_t *node = agnode(graph, currentEstado->nome, 1);
-        mapearEstadoNode(currentEstado, node, enMap);
-
-        currentEstado = currentEstado->next;
+    ESTADO *currentState = af->estado;
+    while (currentState != NULL) {
+        Agnode_t *node = agnode(graph, currentState->nome, 1);
+        if (currentState->final == 1) {
+            agset(node, "shape", "doublecircle");
+            agset(node, "color", "blue");
+        } else {
+            agset(node, "shape", "circle");
+        }
+        currentState = currentState->next;
     }
-    
-    Agedge_t *edge;
-    edge = agedge(graph, node1, node2, NULL, 1);
 
-    // Set label on the edge
-    agsafeset(edge, "label", "Edge Label", "");
+    TRANSICAO *currentTransition = af->transicao;
+    while (currentTransition != NULL) {
+        agedge(graph, agnode(graph, currentTransition->q_from, 0), agnode(graph, currentTransition->q_to, 0), NULL, 1);
+        currentTransition = currentTransition->next;
+    }
 
-    // Layout the graph
+    Agnode_t *initialNode = agnode(graph, af->estado_inicial, 1);
+    agset(initialNode, "shape", "none");
+
     gvLayout(gvc, graph, "dot");
 
-    // Render the graph to a PNG file
-    gvRenderFilename(gvc, graph, "png", "output.png");
+    fp = fopen(filename, "w");
+    agwrite(graph, fp);
+    fclose(fp);
 
-    // Cleanup
+    gvRenderFilename(gvc, graph, "png", "automaton.png");
+
     gvFreeLayout(gvc, graph);
     agclose(graph);
     gvFreeContext(gvc);
