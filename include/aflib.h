@@ -172,4 +172,45 @@ int existeEstado(char *estado, AF *af) {
     return 0;
 }
 
+
+int aceitaPalavra(char *palavra, int tamanhoPalavra, AF *af) {
+    char *currentState = strdup(af->estado_inicial);
+
+    for (int i = 0; i < tamanhoPalavra; i++) {
+        char w = palavra[i];
+        int consumido = 0;
+
+        TRANSICAO *tr = af->transicao;
+        while (tr != NULL) {
+            if (strcmp(tr->q_from, currentState) == 0) {
+                if (tr->symbol == w) {
+                    free(currentState);
+                    currentState = strdup(tr->q_to);
+                    consumido = 1;
+                    break;
+                }
+            }
+            tr = tr->next;
+        }
+
+        if (consumido == 0) {
+            free(currentState);
+            return 0;
+        }
+    }
+
+    ESTADO *estado = af->estado;
+    while (estado != NULL) {
+        if (strcmp(currentState, estado->nome) == 0) {
+            free(currentState);
+            return estado->final;
+        }
+        estado = estado->next;
+    }
+
+    free(currentState);
+    return 0;
+}
+
+
 #endif

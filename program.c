@@ -80,7 +80,7 @@ void simulacao() {
         nEstados++;
     }
 
-    while (1) { //Funcao programa
+    while (1) { //Inpuit funcao programa
         printf("\n\n1 - Criar nova transicao\n2 - Proximo passo\n");
         printf("comando >> ");
 
@@ -123,25 +123,78 @@ void simulacao() {
         TRANSICAO *transicao = criarTransicao(symbol, doEstado, paraEstado);
         inserirTransicao(transicao, af);
     }
-
-    // printf("\n------------\n");
-    // printf("Estados: ");
-    // ESTADO *currentEstado = af->estado;
-    // while (currentEstado != NULL) {
-    //     printf("%s", currentEstado->nome);
-    //     currentEstado = currentEstado->next;
-    // }
-    // printf("\n-\n");
-    // printf("------------");
     
     printf("ANALISE PRELIMINAR: ");
     int tipoAF = classificaAf(af);
 
-    if (tipoAF == 1) {printf("AFD");}
-    else if (tipoAF == 2) {printf("AFN");}
-    else if (tipoAF == 3) {printf("AFN com movimento vazios");}
+    if (tipoAF == 1) {printf("AFD\n");}
+    else if (tipoAF == 2) {printf("AFN\n");}
+    else if (tipoAF == 3) {printf("AFN com movimento vazios\n");}
 
-    // gerarGrafo(af);
+    while (1) {
+        printf("tamanho da palavra: ");
+        int tamanho;
+        if (scanf("%d", &tamanho) != 1 || tamanho <= 0) {
+            printf("Input invalido\n");
+            exit(1);
+        }
+        while (getchar() != '\n');
+
+        printf("Digite uma palavra: ");
+        char *palavra = (char*)malloc(sizeof(char) * (tamanho + 1));
+        if (palavra == NULL) {
+            printf("Erro mem alloc.\n");
+            exit(1);
+        }
+        if (fgets(palavra, tamanho + 1, stdin) == NULL) {
+            printf("Erro palavra.\n");
+            free(palavra);
+            exit(1);
+        }
+        palavra[strcspn(palavra, "\n")] = '\0';
+
+        for (int i = 0; i <= tamanho; i++) {
+            char *subword = (char*)malloc(sizeof(char) * (i + 1));
+            if (subword == NULL) {
+                printf("Erro mem alloc.\n");
+                free(palavra);
+                exit(1);
+            }
+            strncpy(subword, palavra, i);
+            subword[i] = '\0';
+
+            int aceita = aceitaPalavra(subword, i, af);
+
+            if (i == 0) {
+                free(subword);
+                subword = strdup("(Palavra vazia)");
+            }
+
+            if (aceita == 1) {
+                printf("%s => aceita\n", subword);
+            } else if (aceita == 0) {
+                printf("%s => rejeitada\n", subword);
+            }
+
+            free(subword);
+        }
+
+        free(palavra);
+
+        int opcao = 0;
+        printf("1 - Continuar\n2 - Finalizar Simulacao e gerar grafo visual\n");
+        scanf("%d", &opcao);
+
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
+
+        if (opcao == 2) {
+            break;
+        }
+
+    }
+
+    gerarGrafo(af);
 
 }
 
